@@ -116,7 +116,14 @@ object Dependencies {
 
   implicit class Exclude(module: ModuleID) {
      def guavaExclude: ModuleID =
-       module exclude("com.google.guava", "guava")
+       module.exclude("com.google.guava", "guava")
+       .exclude("com.codahale.metrics", "metrics-core")
+       .exclude("io.netty", "netty-transport")
+       .exclude("io.netty", "netty-buffer")
+       .exclude("io.netty", "netty-codec")
+       .exclude("io.netty", "netty-handler")
+       .exclude("io.netty", "*")
+       .exclude("commons-logging", "*")
 
      def sparkExclusions: ModuleID = module.guavaExclude
        .exclude("org.apache.spark", s"spark-core_$scalaBinary")
@@ -130,6 +137,17 @@ object Dependencies {
        .exclude("org.apache.spark", s"spark-mllib_$scalaBinary")
        .exclude("org.scala-lang", "scala-compiler")
 
+    def metricsExclusions: ModuleID = module.guavaExclude
+       .exclude("com.addthis.metrics", "reporter-config")
+       .exclude("com.yammer.metrics", "metrics-core")
+       .exclude("com.codahale.metrics", "metrics-core")
+       .exclude("io.netty", "netty-transport")
+       .exclude("io.netty", "netty-buffer")
+       .exclude("io.netty", "netty-codec")
+       .exclude("io.netty", "netty-handler")
+       .exclude("io.netty", "*")
+       .exclude("commons-logging", "*")
+
      def kafkaExclusions: ModuleID = module
        .exclude("org.slf4j", "slf4j-simple")
        .exclude("com.sun.jmx", "jmxri")
@@ -142,7 +160,8 @@ object Dependencies {
     val akkaActor           = "com.typesafe.akka"       %% "akka-actor"            % Akka           % "provided"  // ApacheV2
     val akkaRemote          = "com.typesafe.akka"       %% "akka-remote"           % Akka           % "provided"  // ApacheV2
     val akkaSlf4j           = "com.typesafe.akka"       %% "akka-slf4j"            % Akka           % "provided"  // ApacheV2
-    val cassandraClient     = "org.apache.cassandra"    % "cassandra-clientutil"   % Cassandra       guavaExclude // ApacheV2
+    val cassandraClient     = "org.apache.cassandra"    % "cassandra-clientutil"   % Cassandra      metricsExclusions // ApacheV2
+    val cassandraServer     = "org.apache.cassandra"    % "cassandra-all"          % Cassandra      metricsExclusions
     val cassandraDriver     = "com.datastax.cassandra"  % "cassandra-driver-core"  % CassandraDriver guavaExclude // ApacheV2
     val commonsLang3        = "org.apache.commons"      % "commons-lang3"          % CommonsLang3                 // ApacheV2
     val config              = "com.typesafe"            % "config"                 % Config         % "provided"  // ApacheV2
@@ -228,7 +247,7 @@ object Dependencies {
 
   val akka = Seq(akkaActor, akkaRemote, akkaSlf4j)
 
-  val cassandra = Seq(cassandraClient, cassandraDriver)
+  val cassandra = Seq(cassandraServer, cassandraClient, cassandraDriver)
 
   val spark = Seq(sparkCore, sparkStreaming, sparkSql, sparkCatalyst, sparkHive)
 

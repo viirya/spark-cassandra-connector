@@ -1,6 +1,10 @@
 package com.datastax.spark.connector.rdd.partitioner.dht
 
+import java.nio.ByteBuffer
+
 import scala.language.existentials
+
+import org.apache.cassandra.dht._
 
 trait TokenFactory[V, T <: Token[V]] {
   def minToken: T
@@ -24,6 +28,16 @@ trait TokenFactory[V, T <: Token[V]] {
 
   /** Converts a token to its string representation */
   def tokenToString(token: T): String
+
+  var startToken: Option[T] = None
+  var endToken: Option[T] = None
+
+  def setStartToken(token: String): Unit = {
+    startToken = Some(tokenFromString(token))
+  }
+  def setEndToken(token: String): Unit = {
+    endToken = Some(tokenFromString(token))
+  }
 }
 
 object TokenFactory {
@@ -38,6 +52,17 @@ object TokenFactory {
     override def tokenFromString(string: String) = LongToken(string.toLong)
     override def tokenToString(token: LongToken) = token.value.toString
 
+    override def setStartToken(token: String): Unit = {
+      val bToken: ByteBuffer = ByteBuffer.wrap(token.getBytes())
+      val partitioner = new Murmur3Partitioner()
+      startToken = Some(LongToken(partitioner.getToken(bToken).getTokenValue.asInstanceOf[Long]))
+    }
+
+    override def setEndToken(token: String): Unit = {
+      val bToken: ByteBuffer = ByteBuffer.wrap(token.getBytes())
+      val partitioner = new Murmur3Partitioner()
+      endToken = Some(LongToken(partitioner.getToken(bToken).getTokenValue.asInstanceOf[Long]))
+    }
     override def distance(token1: LongToken, token2: LongToken): BigInt = {
       val left = token1.value
       val right = token2.value
